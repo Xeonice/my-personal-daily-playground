@@ -5,6 +5,7 @@ authors: [douglastang]
 tags: [video]
 ---
 
+import BrowserOnly from '@docusaurus/BrowserOnly';
 import CustomVideoPlayer from '@site/src/components/2025-05-30/CustomVideoPlayer';
 
 # 解决视频播放器原生浮层问题
@@ -31,11 +32,22 @@ import CustomVideoPlayer from '@site/src/components/2025-05-30/CustomVideoPlayer
 
 下面是我们的自定义视频播放器组件，在任何浏览器中都不会显示原生控制栏：
 
-<CustomVideoPlayer 
-  src="https://www.w3schools.com/html/mov_bbb.mp4"
-  poster="https://www.w3schools.com/images/picture.jpg"
-  muted={true}
-/>
+<BrowserOnly>
+  {() => (
+    <CustomVideoPlayer
+      src="https://www.w3schools.com/html/mov_bbb.mp4"
+      poster="https://www.w3schools.com/images/picture.jpg"
+      canvas={true}
+      playBtn={true}
+      jumpBtn={true}
+      autoClose={false}
+      fill={true}
+      isRotate={false}
+      orientation="landscape"
+      isRotate={true}
+    />
+  )}
+</BrowserOnly>
 
 ## 原理解释
 
