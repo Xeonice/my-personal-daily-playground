@@ -1,0 +1,90 @@
+---
+slug: using-html-in-mdx
+title: 解决自定义 video 时，不希望展示 <video /> 标签自己的内容的问题
+authors: [douglastang]
+tags: [video]
+---
+
+import CustomVideoPlayer from '@site/src/components/2025-05-30/CustomVideoPlayer';
+
+# 解决视频播放器原生浮层问题
+
+在开发网页视频播放器时，经常会遇到一个问题：国产浏览器（如 QQ 浏览器、UC 浏览器等）会在视频上强制显示自己的控制浮层，覆盖我们自定义的按钮和交互元素。这篇文章介绍一种使用 Canvas 代替直接显示 video 元素的方法，彻底解决这个问题。
+
+## 问题展示
+
+使用原生 HTML5 video 元素时，在一些国产浏览器中会出现自带的视频控制浮层，无法通过 CSS 完全隐藏：
+
+```html
+<video src="https://www.w3schools.com/html/mov_bbb.mp4" controls></video>
+```
+
+## 解决方案
+
+我们创建了一个自定义视频播放器组件，通过以下技术手段解决这个问题：
+
+1. 将原生视频元素隐藏（设置为不可见）
+2. 使用 Canvas 绘制视频帧
+3. 自定义控制界面和交互按钮
+
+### 示例展示
+
+下面是我们的自定义视频播放器组件，在任何浏览器中都不会显示原生控制栏：
+
+<CustomVideoPlayer 
+  src="https://www.w3schools.com/html/mov_bbb.mp4"
+  poster="https://www.w3schools.com/images/picture.jpg"
+  muted={true}
+/>
+
+## 原理解释
+
+该组件的核心原理是：
+
+1. 创建一个隐藏的 `<video>` 元素，负责实际的视频加载和播放
+2. 使用 `<canvas>` 元素，通过 `requestAnimationFrame` 不断绘制视频的当前帧
+3. 自己实现播放控制、进度条、音量等功能
+4. 添加自定义的浮层按钮
+
+这种方案的优点是：
+
+- 完全避开浏览器原生控制界面
+- 自定义界面可以完全按照设计需求实现
+- 适用于所有浏览器环境
+
+缺点是：
+
+- 需要额外的性能开销（Canvas 绘制）
+- 需要自行实现所有视频控制功能
+
+## 代码解析
+
+组件的关键代码如下：
+
+```jsx
+// 隐藏的原生视频元素
+<video
+  ref={videoRef}
+  className={styles.hiddenVideo}
+  src={src}
+  // 其他属性...
+/>
+
+// Canvas 用于显示视频内容
+<canvas 
+  ref={canvasRef} 
+  className={styles.videoCanvas}
+  onClick={togglePlay}
+/>
+
+// 绘制视频帧到 canvas
+const drawVideoFrame = () => {
+  if (video.videoWidth && video.videoHeight) {
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  }
+  const id = requestAnimationFrame(drawVideoFrame);
+  setAnimationId(id);
+};
+```
+
+通过这种方式，我们完全避免了浏览器原生视频控件的干扰，实现了完全自定义的视频播放体验。

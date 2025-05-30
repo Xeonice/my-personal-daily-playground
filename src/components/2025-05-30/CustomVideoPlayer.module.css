@@ -1,0 +1,182 @@
+.videoContainer {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 56.25%;
+  /* 16:9 宽高比 */
+  background-color: #000;
+  overflow: hidden;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.videoElement {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background-color: #000;
+  z-index: 1;
+}
+
+/* 禁止视频的默认UI控件 */
+.videoElement::-webkit-media-controls {
+  display: none !important;
+}
+
+.videoElement::-webkit-media-controls-panel {
+  display: none !important;
+}
+
+.videoElement::-webkit-media-controls-play-button {
+  display: none !important;
+}
+
+.videoElement::-webkit-media-controls-timeline {
+  display: none !important;
+}
+
+.videoElement::-webkit-media-controls-current-time-display {
+  display: none !important;
+}
+
+.videoElement::-webkit-media-controls-time-remaining-display {
+  display: none !important;
+}
+
+.videoElement::-webkit-media-controls-mute-button {
+  display: none !important;
+}
+
+.videoElement::-webkit-media-controls-volume-slider {
+  display: none !important;
+}
+
+.videoElement::-webkit-media-controls-fullscreen-button {
+  display: none !important;
+}
+
+/* 确保X5内核下视频正确显示 */
+video[x5-video-player-type="h5-page"] {
+  object-position: center center;
+  object-fit: contain !important;
+  background-color: transparent !important;
+}
+
+.controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 2;
+  transition: opacity 0.3s ease;
+  opacity: 0;
+}
+
+.videoContainer:hover .controls {
+  opacity: 1;
+}
+
+.controls.playing {
+  opacity: 0;
+}
+
+.videoContainer:hover .controls.playing {
+  opacity: 1;
+}
+
+.playButton {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  margin-right: 10px;
+}
+
+.progressBar {
+  flex-grow: 1;
+  height: 6px;
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+  cursor: pointer;
+  margin: 0 10px;
+  position: relative;
+}
+
+.progressFill {
+  height: 100%;
+  background-color: #ff3d00;
+  border-radius: 3px;
+}
+
+.timeDisplay {
+  color: white;
+  font-size: 14px;
+  margin: 0 10px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.volumeControl {
+  display: flex;
+  align-items: center;
+}
+
+.muteButton {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0;
+  margin-right: 5px;
+}
+
+.volumeSlider {
+  width: 60px;
+  height: 4px;
+}
+
+.overlayButtons {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  z-index: 3;
+}
+
+.overlayButton {
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.overlayButton:hover {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+/* X5内核特定样式 */
+@media screen and (max-width: 100%) {
+  .videoContainer {
+    transform: none;
+  }
+
+  .videoElement {
+    object-fit: contain !important;
+  }
+}
