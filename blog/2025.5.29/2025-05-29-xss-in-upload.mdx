@@ -6,8 +6,8 @@ tags: [security, xss]
 ---
 
 import React, { useEffect, useState } from 'react';
-import SvgSafePreview from '@site/src/components/2025-05-29/SvgSafePreview';
 import PdfSafePreview from '@site/src/components/2025-05-29/PdfSafePreview';
+import SvgIframeFullCompareDemo from '@site/src/components/2025-05-29/SvgIframeFullCompareDemo';
 
 # 文件上传中的 XSS 风险与防护：以 PDF 和 SVG 为例
 
@@ -17,82 +17,19 @@ import PdfSafePreview from '@site/src/components/2025-05-29/PdfSafePreview';
 
 ---
 
-## SVG 文件前端安全渲染演示
+## SVG 文件 iframe/React 多模式渲染演示
 
-以下演示如何用前端组件安全渲染 SVG 文件：
-
-```tsx
-<SvgSafePreview svgContent={svgString} />
-```
-
-**组件实现：**
+以下演示支持两种渲染模式（直接 SVG 文件、React 安全渲染）和 SVG 文件内容切换，按钮可体验所有组合：
 
 ```tsx
-import React, { useState } from 'react';
-// @ts-ignore
-import DOMPurify from 'dompurify';
-
-interface SvgSafePreviewProps {
-  svgContent: string;
-}
-
-/**
- * SVG 安全预览组件
- * - 支持原始渲染和 DOMPurify 清洗后渲染
- * - 用于演示 SVG XSS 风险与前端防护
- *
- * 用法：
- * <SvgSafePreview svgContent={svgString} />
- */
-const SvgSafePreview: React.FC<SvgSafePreviewProps> = ({ svgContent }) => {
-  const [showSafe, setShowSafe] = useState(true);
-
-  // 清洗 SVG
-  const safeSvg = DOMPurify.sanitize(svgContent, { USE_PROFILES: { svg: true } });
-
-  return (
-    <div>
-      <div style={{ marginBottom: 8 }}>
-        <button onClick={() => setShowSafe(true)} disabled={showSafe}>
-          安全渲染（推荐）
-        </button>
-        <button onClick={() => setShowSafe(false)} disabled={!showSafe} style={{ marginLeft: 8 }}>
-          原始渲染（有风险）
-        </button>
-      </div>
-      <div style={{ border: '1px solid #eee', padding: 16, minHeight: 120 }}>
-        {showSafe ? (
-          <div dangerouslySetInnerHTML={{ __html: safeSvg }} />
-        ) : (
-          <div dangerouslySetInnerHTML={{ __html: svgContent }} />
-        )}
-      </div>
-      <div style={{ marginTop: 8, color: '#888', fontSize: 14 }}>
-        {showSafe
-          ? '已用 DOMPurify 清洗 SVG，移除脚本和危险属性。'
-          : '原始 SVG，可能包含 XSS 风险（仅演示用）。'}
-      </div>
-    </div>
-  );
-};
-
-export default SvgSafePreview;
+<SvgIframeFullCompareDemo />
 ```
 
-**实际演示：**
+> 你可以切换"安全 SVG/恶意 SVG"与两种渲染方式：
+> - 直接渲染：iframe 直接加载 SVG 文件
+> - React安全渲染：iframe 加载 React 应用，内部用 DOMPurify 清洗
 
-export function SvgDemo() {
-  const [svg, setSvg] = useState('');
-  useEffect(() => {
-    fetch('/img/logo.svg')
-      .then(res => res.text())
-      .then(setSvg);
-  }, []);
-  if (!svg) return <div>加载 SVG 示例中...</div>;
-  return <SvgSafePreview svgContent={svg} />;
-}
-
-<SvgDemo />
+<SvgIframeFullCompareDemo />
 
 ---
 
