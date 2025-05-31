@@ -1,0 +1,227 @@
+---
+slug: xss-in-upload
+title: 文件上传中的 XSS 风险与防护：以 PDF 和 SVG 为例
+authors: [douglastang]
+tags: [security, xss]
+---
+
+import React, { useEffect, useState } from 'react';
+import SvgSafePreview from '@site/src/components/2025-05-29/SvgSafePreview';
+import PdfSafePreview from '@site/src/components/2025-05-29/PdfSafePreview';
+
+# 文件上传中的 XSS 风险与防护：以 PDF 和 SVG 为例
+
+在 Web 应用中，文件上传功能常见于资料提交、内容管理等场景。但如果对上传内容缺乏有效校验，攻击者可能通过特制的 PDF 或 SVG 文件进行 XSS（跨站脚本）攻击，危害用户安全。
+
+本篇文档聚焦于 PDF 和 SVG 两类文件上传时的 XSS 风险与防护实践。
+
+---
+
+## SVG 文件前端安全渲染演示
+
+以下演示如何用前端组件安全渲染 SVG 文件：
+
+```tsx
+<SvgSafePreview svgContent={svgString} />
+```
+
+**组件实现：**
+
+```tsx
+import React, { useState } from 'react';
+// @ts-ignore
+import DOMPurify from 'dompurify';
+
+interface SvgSafePreviewProps {
+  svgContent: string;
+}
+
+/**
+ * SVG 安全预览组件
+ * - 支持原始渲染和 DOMPurify 清洗后渲染
+ * - 用于演示 SVG XSS 风险与前端防护
+ *
+ * 用法：
+ * <SvgSafePreview svgContent={svgString} />
+ */
+const SvgSafePreview: React.FC<SvgSafePreviewProps> = ({ svgContent }) => {
+  const [showSafe, setShowSafe] = useState(true);
+
+  // 清洗 SVG
+  const safeSvg = DOMPurify.sanitize(svgContent, { USE_PROFILES: { svg: true } });
+
+  return (
+    <div>
+      <div style={{ marginBottom: 8 }}>
+        <button onClick={() => setShowSafe(true)} disabled={showSafe}>
+          安全渲染（推荐）
+        </button>
+        <button onClick={() => setShowSafe(false)} disabled={!showSafe} style={{ marginLeft: 8 }}>
+          原始渲染（有风险）
+        </button>
+      </div>
+      <div style={{ border: '1px solid #eee', padding: 16, minHeight: 120 }}>
+        {showSafe ? (
+          <div dangerouslySetInnerHTML={{ __html: safeSvg }} />
+        ) : (
+          <div dangerouslySetInnerHTML={{ __html: svgContent }} />
+        )}
+      </div>
+      <div style={{ marginTop: 8, color: '#888', fontSize: 14 }}>
+        {showSafe
+          ? '已用 DOMPurify 清洗 SVG，移除脚本和危险属性。'
+          : '原始 SVG，可能包含 XSS 风险（仅演示用）。'}
+      </div>
+    </div>
+  );
+};
+
+export default SvgSafePreview;
+```
+
+**实际演示：**
+
+export function SvgDemo() {
+  const [svg, setSvg] = useState('');
+  useEffect(() => {
+    fetch('/img/logo.svg')
+      .then(res => res.text())
+      .then(setSvg);
+  }, []);
+  if (!svg) return <div>加载 SVG 示例中...</div>;
+  return <SvgSafePreview svgContent={svg} />;
+}
+
+<SvgDemo />
+
+---
+
+## PDF 文件前端安全处理演示
+
+以下演示如何用前端组件安全处理 PDF 文件：
+
+```tsx
+<PdfSafePreview fileUrl="/example.pdf" />
+```
+
+**组件实现：**
+
+```tsx
+import React from 'react';
+
+interface PdfSafePreviewProps {
+  fileUrl: string;
+  fileName?: string;
+}
+
+/**
+ * PDF 安全预览组件
+ * - 只允许下载或用 PDF.js 预览，不直接用 <iframe>/<embed>
+ * - 用于演示 PDF XSS 风险与前端防护
+ *
+ * 用法：
+ * <PdfSafePreview fileUrl="/uploads/test.pdf" />
+ */
+const PdfSafePreview: React.FC<PdfSafePreviewProps> = ({ fileUrl, fileName }) => {
+  return (
+    <div>
+      <div style={{ marginBottom: 8 }}>
+        <a href={fileUrl} download={fileName || true} target="_blank" rel="noopener noreferrer">
+          下载 PDF 文件
+        </a>
+        <span style={{ marginLeft: 16, color: '#888' }}>
+          （推荐下载后用本地 PDF 阅读器打开）
+        </span>
+      </div>
+      <div style={{ marginTop: 8, color: '#888', fontSize: 14 }}>
+        不建议直接用 <code>&lt;iframe&gt;</code> 或 <code>&lt;embed&gt;</code> 方式在前端预览用户上传的 PDF，防止 PDF 内嵌脚本被执行。
+        <br />
+        如需在线预览，建议用 PDF.js 并禁用脚本（可参考 PDF.js 官方文档配置）。
+      </div>
+    </div>
+  );
+};
+
+export default PdfSafePreview;
+```
+
+**实际演示：**
+
+<PdfSafePreview fileUrl="/img/example.pdf" fileName="示例文件.pdf" />
+
+> 你可以将自己的 PDF 文件放到 static/img/example.pdf 进行本地演示。
+
+---
+
+## 1. PDF 上传中的 XSS 风险
+
+### 风险说明
+- PDF 文件本身可嵌入 JavaScript（如 Acrobat Reader 支持 `app.alert('XSS')`）。
+- 某些浏览器/插件可能解析 PDF 内的脚本。
+- 恶意 PDF 还可通过嵌入外链、表单等方式诱导用户点击。
+
+### 防护建议
+- **上传端**：
+  - 限制文件类型（MIME 检查、扩展名校验）。
+  - 使用 PDF 解析库（如 pdfcpu、PyPDF2）检测并移除脚本对象。
+  - 拒绝含有脚本的 PDF 文件。
+- **下载/预览端**：
+  - 不直接用 `<iframe src="...">` 或 `<embed>` 预览用户上传的 PDF。
+  - 推荐后端转图片（如 pdf2image），或用安全的 PDF 渲染器（如 PDF.js，且配置为禁止脚本）。
+
+### 代码示例（Python，移除 PDF 脚本）
+```python
+from PyPDF2 import PdfReader, PdfWriter
+
+def remove_javascript(input_path, output_path):
+    reader = PdfReader(input_path)
+    writer = PdfWriter()
+    for page in reader.pages:
+        writer.add_page(page)
+    # 移除文档级 JS
+    if "/JavaScript" in reader.trailer["/Root"]:
+        del reader.trailer["/Root"]["/JavaScript"]
+    with open(output_path, "wb") as f:
+        writer.write(f)
+```
+
+---
+
+## 2. SVG 上传中的 XSS 风险
+
+### 风险说明
+- SVG 是 XML 格式，支持 `<script>`、`onload`、`onerror` 等事件。
+- 恶意 SVG 可直接注入脚本，在页面内执行。
+
+### 防护建议
+- **上传端**：
+  - 严格校验 SVG 内容，移除 `<script>`、事件属性（如 `onload`、`onerror` 等）。
+  - 推荐用专用库（如 [sanitize-svg](https://github.com/cure53/DOMPurify/tree/main/demos/svg) 或 [DOMPurify](https://github.com/cure53/DOMPurify)）。
+  - 限制 SVG 文件大小和复杂度。
+- **展示端**：
+  - 不直接用 `innerHTML` 或 `<img src="data:image/svg+xml;base64,...">` 方式渲染用户 SVG。
+  - 推荐用 `<img src="/safe/path/to/file.svg">`，并确保文件已消毒。
+
+### 代码示例（Node.js，使用 DOMPurify 清洗 SVG）
+```js
+const createDOMPurify = require('dompurify');
+const { JSDOM } = require('jsdom');
+
+const window = new JSDOM('').window;
+const DOMPurify = createDOMPurify(window);
+
+function sanitizeSVG(svgString) {
+  return DOMPurify.sanitize(svgString, { USE_PROFILES: { svg: true } });
+}
+```
+
+---
+
+## 3. 总结与最佳实践
+- 文件上传后端要做内容校验和消毒，不能只信任前端。
+- 展示用户上传的 PDF/SVG 时，优先用安全的渲染方式。
+- 定期关注安全社区的最新绕过手法。
+
+---
+
+如需更详细的代码或安全策略，欢迎补充讨论！ 
