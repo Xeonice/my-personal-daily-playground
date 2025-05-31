@@ -1,6 +1,7 @@
 import * as React from 'react';
 import Layout from '@theme/Layout';
 import Link from '@docusaurus/Link';
+import { Button } from '../components/ui/button';
 
 export default function Home() {
   return (
@@ -10,8 +11,8 @@ export default function Home() {
         <h1 style={{fontSize: '2.6rem', fontWeight: 700, marginBottom: 12, color: '#222'}}>Claude 老师每日问答精选</h1>
         <p style={{fontSize: '1.2rem', color: '#555', marginBottom: 32, maxWidth: 480, textAlign: 'center'}}>本项目用于收集和整理 Claude 老师每天为组内同学提供的精彩问答与解答内容，便于大家查阅和学习。</p>
         <div style={{display: 'flex', gap: 20, marginBottom: 32}}>
-          <Link className="button button--primary button--lg" to="/blog">查看问答归档</Link>
-          <Link className="button button--secondary button--lg" to="/docs/intro">关于项目</Link>
+          <Link to="/blog"><Button>查看问答归档</Button></Link>
+          <Link to="/docs/intro"><Button variant="outline">关于项目</Button></Link>
         </div>
         <div style={{background: '#fff', borderRadius: 16, boxShadow: '0 2px 16px #0001', padding: 24, maxWidth: 420, textAlign: 'center'}}>
           <h2 style={{fontSize: '1.3rem', fontWeight: 600, marginBottom: 8}}>关于 Claude 老师</h2>
