@@ -45,6 +45,7 @@ const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({
   const [animationId, setAnimationId] = useState<number | null>(null);
   const [videoReady, setVideoReady] = useState(false);
   // SSR安全：初始为'portrait'，只在浏览器端检测
+  // test
   const [currentOrientation, setCurrentOrientation] = useState<'portrait' | 'landscape'>('portrait');
 
   // 处理横竖屏（只在浏览器端）
